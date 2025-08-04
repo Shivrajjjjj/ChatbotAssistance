@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "ChatbotAssistance.Blazor\\ChatbotAssistance.Blazor.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "ChatbotAssistance.Shared\\ChatbotAssistance.Shared.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

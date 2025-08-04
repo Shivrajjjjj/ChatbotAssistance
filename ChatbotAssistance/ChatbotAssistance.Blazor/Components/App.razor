@@ -1,0 +1,36 @@
+﻿@using static Microsoft.AspNetCore.Components.Web.RenderMode
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
+    
+    <!-- App-specific CSS -->
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["ChatbotAssistance.Blazor.styles.css"]" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+
+    <!-- Import map for .NET 8 -->
+    <ImportMap />
+
+    <!-- Required for Blazor components -->
+    <HeadOutlet />
+</head>
+
+<body>
+    <!-- Interactive rendering for Blazor Web App -->
+    <Routes @rendermode="InteractiveServer" />
+
+    <!-- Blazor WebAssembly or Server startup script -->
+    <script src="_framework/blazor.web.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,323 @@
+﻿@page "/chat"
+@using Microsoft.AspNetCore.Components.Web
+@inject IHttpClientFactory ClientFactory
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f0f2f5;
+    }
+
+   .chat-message {
+    display: flex;
+    align-items: flex-end;
+    
+}
+
+.chat-message.user {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+
+.chat-message.bot {
+    justify-content: flex-start;
+}
+
+.chat-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.chat-bubble {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 1rem;
+    max-width: 75%;
+    word-wrap: break-word;
+    animation: fadeIn 0.3s ease-in-out;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    position: relative;
+}
+.chat-bubble.user {
+    background-color: #e2e8f0;
+    align-self: flex-end;
+    border-top-right-radius: 4px;
+    text-align: right;
+
+    /* 💡 Force single line */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-bubble.bot {
+    background-color: #dbeafe;
+    border-top-left-radius: 4px;
+    border-left: 4px solid #2563eb;
+    text-align: left;
+}
+
+.timestamp {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 4px;
+    padding: 0 4px;
+    text-align: right;
+}
+
+
+    .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    .big-input {
+        height: 52px;
+        font-size: 1rem;
+        padding: 0.65rem 1rem;
+        border-radius: 6px;
+    }
+
+    .btn-primary {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @@media (max-width: 768px) {
+        .chat-container {
+            padding: 2rem 1rem;
+        }
+
+        .chat-box {
+            padding: 1rem;
+        }
+
+        .chat-bubble {
+            font-size: 0.95rem;
+        }
+
+        .big-input {
+            height: 48px;
+            font-size: 0.95rem;
+        }
+    }
+</style>
+
+
+
+<div class="chat-bg"></div>
+
+<div class="chat-container">
+    <h3 class="text-black text-center mb-4">Assistant</h3>
+
+    <div class="card shadow p-4">
+        <div class="chat-box">
+    @foreach (var message in Conversation)
+    {
+        if (message.IsUser)
+        {
+            <div class="d-flex align-items-end justify-content-end mb-2">
+                <div class="me-2 text-end">
+                    <div class="chat-bubble user">@message.Content</div>
+                    <div class="timestamp">@message.Timestamp.ToString("HH:mm:ss")</div>
+                </div>
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="avatar" alt="user" />
+            </div>
+        }
+        else
+        {
+            <div class="d-flex align-items-start mb-2">
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712037.png" class="avatar me-2" alt="bot" />
+                <div>
+                    <div class="chat-bubble bot">@message.Content</div>
+                    <div class="timestamp">@message.Timestamp.ToString("HH:mm:ss")</div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+
+        <div class="mb-3">
+            <label for="userInput" class="form-label">Type your question:</label>
+            <input id="userInput"
+                   class="form-control big-input"
+                   @bind="UserQuestion"
+                   @bind:event="oninput"
+                   @onkeydown="HandleKeyDown"
+                   placeholder="Ask something..." />
+        </div>
+
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary btn-lg" @onclick="SendQuestion" disabled="@IsLoading">
+                @(IsLoading ? "Thinking..." : "Ask")
+            </button>
+
+            <button class="btn btn-outline-info btn-sm" @onclick="GenerateSampleDocument">
+                📄 Generate Document
+            </button>
+
+            <button class="btn btn-outline-success btn-sm" @onclick="RouteSampleDepartment">
+                🧭 Route Department
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="alert alert-danger mt-3">@ErrorMessage</div>
+        }
+    </div>
+</div>
+
+@code {
+    private string UserQuestion { get; set; } = string.Empty;
+    private string ErrorMessage = string.Empty;
+    private bool IsLoading = false;
+
+    private List<ChatMessage> Conversation = new();
+
+    private async Task SendQuestion()
+    {
+        ErrorMessage = "";
+        if (string.IsNullOrWhiteSpace(UserQuestion))
+        {
+            ErrorMessage = "Please enter a question.";
+            return;
+        }
+
+        IsLoading = true;
+
+        Conversation.Add(new ChatMessage
+        {
+            Content = UserQuestion,
+            IsUser = true,
+            Timestamp = DateTime.Now
+        });
+
+        try
+        {
+            var client = ClientFactory.CreateClient("ApiClient");
+            var request = new ChatRequest { Question = UserQuestion };
+            var response = await client.PostAsJsonAsync("api/chat/ask", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ChatResponse>();
+                Conversation.Add(new ChatMessage
+                {
+                    Content = result?.Answer ?? "🤖 No response received.",
+                    IsUser = false,
+                    Timestamp = DateTime.Now
+                });
+            }
+            else
+            {
+                ErrorMessage = $"❌ API Error: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"❌ Exception: {ex.Message}";
+        }
+
+        IsLoading = false;
+        UserQuestion = "";
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendQuestion();
+        }
+    }
+
+    private async Task GenerateSampleDocument()
+    {
+        var client = ClientFactory.CreateClient("ApiClient");
+        var docReq = new DocumentRequest { Type = "Invoice" };
+        var response = await client.PostAsJsonAsync("api/chat/generate-document", docReq);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<DocumentResponse>();
+            Conversation.Add(new ChatMessage
+            {
+                Content = result?.Document ?? "📄 Document not generated.",
+                IsUser = false,
+                Timestamp = DateTime.Now
+            });
+        }
+    }
+
+    private async Task RouteSampleDepartment()
+    {
+        var client = ClientFactory.CreateClient("ApiClient");
+        var routeReq = new RouteRequest { Department = "IT" };
+        var response = await client.PostAsJsonAsync("api/chat/route", routeReq);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<RouteResponse>();
+            Conversation.Add(new ChatMessage
+            {
+                Content = $"📬 Routed to: {result?.RoutedTo ?? "Unknown"}",
+                IsUser = false,
+                Timestamp = DateTime.Now
+            });
+        }
+    }
+
+    public class ChatMessage
+    {
+        public string Content { get; set; } = string.Empty;
+        public bool IsUser { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+
+    public class ChatRequest
+    {
+        public string Question { get; set; } = string.Empty;
+    }
+
+    public class ChatResponse
+    {
+        public string Answer { get; set; } = string.Empty;
+    }
+
+    public class DocumentRequest
+    {
+        public string Type { get; set; } = string.Empty;
+    }
+
+    public class DocumentResponse
+    {
+        public string Document { get; set; } = string.Empty;
+    }
+
+    public class RouteRequest
+    {
+        public string Department { get; set; } = string.Empty;
+    }
+
+    public class RouteResponse
+    {
+        public string RoutedTo { get; set; } = string.Empty;
+    }
+}
