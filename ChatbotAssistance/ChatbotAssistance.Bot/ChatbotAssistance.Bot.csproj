@@ -1,38 +1,38 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
-	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
-		<Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<OutputType>Exe</OutputType>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
 
-	<!-- ✅ FrameworkReference for ASP.NET Core -->
-	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-	</ItemGroup>
+  <!-- ✅ FrameworkReference for ASP.NET Core -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 
-	<!-- ✅ NuGet dependencies -->
-	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.7" />
-		<PackageReference Include="Microsoft.Bot.Builder" Version="4.23.0" />
-		<PackageReference Include="Microsoft.Bot.Builder.Dialogs" Version="4.23.0" />
-		<PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.23.0" />
-		<PackageReference Include="Microsoft.Bot.Connector" Version="4.23.0" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.7" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
-	</ItemGroup>
+  <!-- ✅ NuGet dependencies (updated for .NET 8 compatibility) -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.4" />
+    <PackageReference Include="Microsoft.Bot.Builder" Version="4.23.0" />
+    <PackageReference Include="Microsoft.Bot.Builder.Dialogs" Version="4.23.0" />
+    <PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.23.0" />
+    <PackageReference Include="Microsoft.Bot.Connector" Version="4.23.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+  </ItemGroup>
 
-	<!-- ✅ Project references to Shared & API -->
-	<ItemGroup>
-		<ProjectReference Include="..\ChatbotAssistance.Shared\ChatbotAssistance.Shared.csproj" />
-	</ItemGroup>
+  <!-- ✅ Project references to Shared -->
+  <ItemGroup>
+    <ProjectReference Include="..\ChatbotAssistance.Shared\ChatbotAssistance.Shared.csproj" />
+  </ItemGroup>
 
-	<!-- ✅ Ensure appsettings.json is copied -->
-	<ItemGroup>
-		<None Update="appsettings.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
+  <!-- ✅ Ensure appsettings.json is copied -->
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
 </Project>
